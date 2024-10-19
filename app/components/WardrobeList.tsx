@@ -47,6 +47,7 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
         
         // Assuming the first result is the most likely
         const predictedItem = results[0].label;
+        console.log(predictedItem);
         
         // You might want to map the prediction to your wardrobe item types
         const itemType = mapPredictionToItemType(predictedItem);
@@ -64,14 +65,37 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
   }
 
   function mapPredictionToItemType(prediction: string): string {
-    // This is a simple mapping function. You might want to expand this based on your needs
-    console.log(prediction);
-    if (prediction.includes('shirt') || prediction.includes('t-shirt')) return 'Shirt';
-    if (prediction.includes('pants') || prediction.includes('trousers')) return 'Pants';
-    if (prediction.includes('shoe')) return 'Shoes';
-    // Add more mappings as needed
+    // Normalize prediction string by converting to lowercase
+    const lowerPrediction = prediction.toLowerCase();
+    console.log("Normalized prediction:", lowerPrediction);
+  
+    // Define clothing item mapping with prioritization of more specific terms
+    const mapping: { [key: string]: string[] } = {
+      'Shirt': ['shirt', 't-shirt', 'dress shirt', 'blouse', 'polo'],
+      'Pants': ['pants', 'trousers', 'jeans', 'slacks', 'chinos'],
+      'Shorts': ['shorts', 'bermudas'],
+      'Shoes': ['shoe', 'sneaker', 'boot', 'loafer', 'sandals', 'flip-flop'],
+      'Dress': ['dress', 'gown', 'sundress'],
+      'Skirt': ['skirt'],
+      'Jacket': ['jacket', 'blazer', 'coat'],
+      'Sweater': ['sweater', 'jumper', 'hoodie', 'cardigan'],
+      'Hat': ['hat', 'cap', 'beanie'],
+      'Bag': ['bag', 'backpack', 'purse'],
+      'Scarf': ['scarf'],
+      'Gloves': ['gloves'],
+    };
+  
+    // Iterate through the mapping and return the first matching type
+    for (const [itemType, keywords] of Object.entries(mapping)) {
+      if (keywords.some(keyword => lowerPrediction.includes(keyword))) {
+        return itemType;
+      }
+    }
+  
+    // If no match is found, return 'Other'
     return 'Other';
   }
+  
 
   return (
     <Card>
