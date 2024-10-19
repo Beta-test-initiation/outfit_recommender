@@ -100,10 +100,8 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
 
   return (
     <Card className="mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-      <CardHeader>
-        <CardTitle className="text-2xl text-pink-600">Your Wardrobe</CardTitle>
-      </CardHeader>
       <CardContent className="p-6">
+      <CardTitle className="text-2xl text-pink-600 py-3">Your Wardrobe</CardTitle>
         <div className="mb-6">
           <Label htmlFor="wardrobeUpload" className="cursor-pointer block">
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors">
