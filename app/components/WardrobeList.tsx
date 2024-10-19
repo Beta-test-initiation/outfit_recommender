@@ -1,14 +1,15 @@
 'use client'
 
 import { useEffect, useState, ChangeEvent } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card"
-import { Button } from "./ui/Button"
-import { Shirt, Trash2, Upload } from "lucide-react"
-import AddItemForm from './AddItemForm'
+
+import { Shirt, Trash2, Upload, Plus } from "lucide-react"
 import { WardrobeItem } from "../../types"
-import { Label } from "./ui/label"
-import { Input } from "@mui/material"
+
 import * as ml5 from "ml5"
+import { Card, CardHeader, CardContent, Input, Select, Button } from "@mui/material"
+import { CardTitle } from "./ui/Card"
+import { Label } from "./ui/label"
+import { SelectTrigger, SelectValue, SelectContent, SelectItem } from "./ui/select"
 
 interface WardrobeListProps {
   wardrobe: WardrobeItem[];
@@ -17,9 +18,10 @@ interface WardrobeListProps {
 
 export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProps) {
   const [classifier, setClassifier] = useState<any>(null);
+  const [newItem, setNewItem] = useState({ name: '', color: '', type: '' });
+  const [isAddingItem, setIsAddingItem] = useState(false);
 
   useEffect(() => {
-    // Initialize the image classifier when the component mounts
     const initClassifier = async () => {
       const imageClassifier = await ml5.imageClassifier('MobileNet');
       setClassifier(imageClassifier);
@@ -27,12 +29,16 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
     initClassifier();
   }, []);
 
-  const handleAddItem = (newItem: Omit<WardrobeItem, 'id'>) => {
-    setWardrobe(prev => [...prev, { ...newItem, id: prev.length + 1 }])
+  const handleAddItem = () => {
+    if (newItem.name && newItem.color && newItem.type) {
+      setWardrobe(prev => [...prev, { ...newItem, id: prev.length + 1 }]);
+      setNewItem({ name: '', color: '', type: '' });
+      setIsAddingItem(false);
+    }
   }
 
   const handleRemoveItem = (id: number) => {
-    setWardrobe(prev => prev.filter(item => item.id !== id))
+    setWardrobe(prev => prev.filter(item => item.id !== id));
   }
 
   async function handleWardrobeImageUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -43,21 +49,15 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
       
       img.onload = async () => {
         const results = await classifier.classify(img);
-        console.log('Classification Results:', results);
-        
-        // Assuming the first result is the most likely
         const predictedItem = results[0].label;
-        console.log(predictedItem);
-        
-        // You might want to map the prediction to your wardrobe item types
         const itemType = mapPredictionToItemType(predictedItem);
         
-        // Add the new item to the wardrobe
-        handleAddItem({
+        setNewItem({
           name: `New ${itemType}`,
           type: itemType,
-          color: 'Unknown', // You might want to use a color detection library here
+          color: 'Unknown',
         });
+        setIsAddingItem(true);
         
         URL.revokeObjectURL(img.src);
       };
@@ -65,11 +65,7 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
   }
 
   function mapPredictionToItemType(prediction: string): string {
-    // Normalize prediction string by converting to lowercase
     const lowerPrediction = prediction.toLowerCase();
-    console.log("Normalized prediction:", lowerPrediction);
-  
-    // Define clothing item mapping with prioritization of more specific terms
     const mapping: { [key: string]: string[] } = {
       'Shirt': ['shirt', 't-shirt', 'dress shirt', 'blouse', 'polo'],
       'Pants': ['pants', 'trousers', 'jeans', 'slacks', 'chinos'],
@@ -85,51 +81,87 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
       'Gloves': ['gloves'],
     };
   
-    // Iterate through the mapping and return the first matching type
     for (const [itemType, keywords] of Object.entries(mapping)) {
       if (keywords.some(keyword => lowerPrediction.includes(keyword))) {
         return itemType;
       }
     }
   
-    // If no match is found, return 'Other'
     return 'Other';
   }
-  
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Your Wardrobe</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4">
-          <Label htmlFor="wardrobeUpload" className="cursor-pointer">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Upload className="mx-auto h-12 w-12 text-gray-400" />
-              <span className="mt-2 block text-sm font-medium text-gray-700">
+    <Card className=" mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+      
+        
+     
+      <CardContent className="">
+      <CardTitle className="text-2xl text-pink-600 py-3 pink-600 ">Your Wardrobe</CardTitle>
+        <div className="mb-6">
+          <Label htmlFor="wardrobeUpload" className="cursor-pointer block">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors">
+              <Upload className="mx-auto h-16 w-16 text-gray-400" />
+              <span className="mt-4 block text-lg font-medium text-gray-700">
                 Upload clothing item
               </span>
+              <p className="mt-2 text-sm text-gray-500">
+                Our AI will analyze the style and help you add it to your wardrobe
+              </p>
             </div>
             <Input id="wardrobeUpload" type="file" className="sr-only" onChange={handleWardrobeImageUpload} />
           </Label>
         </div>
-        <AddItemForm onAddItem={handleAddItem} />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        {isAddingItem && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-semibold mb-4 text-pink-600">Add New Item</h3>
+            <div className="space-y-4 text-pink">
+              <Input
+                placeholder="Item name"
+                value={newItem.name}
+                onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+              />
+              <Input
+                placeholder="Color"
+                value={newItem.color}
+                onChange={(e) => setNewItem({ ...newItem, color: e.target.value })}
+              />
+              
+              <Button onClick={handleAddItem} className="w-full mt-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-full text-lg transform hover:scale-105 transition-transform duration-20">
+                Add to Wardrobe</Button>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {wardrobe.map((item) => (
-            <Card key={item.id}>
-              <CardContent className="p-4 flex justify-between items-center">
-                <div>
-                  <Shirt className="h-8 w-8 mb-2" />
-                  <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-sm text-gray-500">{item.color} - {item.type}</p>
+            <Card key={item.id} className="bg-gray-50 hover:shadow-md transition-shadow">
+              <CardContent className="p-4 flex flex-col items-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-pink-200 to-purple-200 rounded-full flex items-center justify-center mb-2">
+                  <Shirt className="h-8 w-8 text-gray-600" />
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
-                  <Trash2 className="h-4 w-4" />
+                <h3 className="font-semibold text-center">{item.name}</h3>
+                <p className="text-sm text-gray-600 text-center">{item.color}</p>
+                <p className="text-xs text-gray-500 text-center">{item.type}</p>
+                <Button
+                  // variant="ghost"
+                  // size="icon"
+                  onClick={() => handleRemoveItem(item.id)}
+                  className="mt-2"
+                >
+                  <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
                 </Button>
               </CardContent>
             </Card>
           ))}
+          <Card className="bg-gray-50 hover:shadow-md transition-shadow cursor-pointer" onClick={() => setIsAddingItem(true)}>
+            <CardContent className="p-4 flex flex-col items-center justify-center h-full">
+              <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-2">
+                <Plus className="h-8 w-8 text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-600">Add Item</p>
+            </CardContent>
+          </Card>
         </div>
       </CardContent>
     </Card>

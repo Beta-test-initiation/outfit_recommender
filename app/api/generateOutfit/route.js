@@ -1,23 +1,36 @@
 // app/api/generateOutfit/route.js
-import { NextResponse } from 'next/server';
-import { Client } from 'craiyon';
 
-// Initialize the Craiyon client
-const craiyon = new Client();
+import { CohereClient } from 'cohere-ai';
+import { NextResponse } from 'next/server';
+
+// Initialize Cohere client
+const cohere = new CohereClient({
+  token: process.env.COHERE_API_KEY,
+});
 
 export async function POST(request) {
-  const { prompt } = await request.json();
-
   try {
-    // Generate images based on the prompt
-    const result = await craiyon.generate({ prompt });
+    const { prompt } = await request.json();
 
-    // The result contains images in base64 format
-    const images = result.images.map(image => `data:image/png;base64,${image}`);
+    if (!prompt) {
+      return NextResponse.json({ message: 'Prompt is required' }, { status: 400 });
+    }
 
-    return NextResponse.json({ images }, { status: 201 });
+    const response = await cohere.chat({
+      model: 'command-r-plus-08-2024',
+      message: prompt,
+      temperature: 0.7,
+      // You can add other parameters as needed
+    });
+
+    const generatedText = response.text;
+
+    return NextResponse.json({ text: generatedText });
   } catch (error) {
-    console.error('Error generating image:', error);
-    return NextResponse.json({ error: 'Image generation failed.' }, { status: 500 });
+    console.error('Error calling Cohere API:', error);
+    return NextResponse.json(
+      { message: 'Error generating outfit description', error: error.message },
+      { status: 500 }
+    );
   }
 }
