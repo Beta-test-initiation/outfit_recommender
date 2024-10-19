@@ -1,15 +1,13 @@
 'use client'
 
 import { useEffect, useState, ChangeEvent } from "react"
-
 import { Shirt, Trash2, Upload, Plus } from "lucide-react"
 import { WardrobeItem } from "../../types"
+import { Card, CardHeader, CardContent, Input, Select, Button } from "@mui/material";
+import { CardTitle } from "./ui/Card";
+import { Label } from "./ui/label";
+import { SelectTrigger, SelectValue, SelectContent, SelectItem } from "./ui/select";
 
-import * as ml5 from "ml5"
-import { Card, CardHeader, CardContent, Input, Select, Button } from "@mui/material"
-import { CardTitle } from "./ui/Card"
-import { Label } from "./ui/label"
-import { SelectTrigger, SelectValue, SelectContent, SelectItem } from "./ui/select"
 
 interface WardrobeListProps {
   wardrobe: WardrobeItem[];
@@ -20,14 +18,24 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
   const [classifier, setClassifier] = useState<any>(null);
   const [newItem, setNewItem] = useState({ name: '', color: '', type: '' });
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [ml5, setMl5] = useState<any>(null);
 
   useEffect(() => {
-    const initClassifier = async () => {
-      const imageClassifier = await ml5.imageClassifier('MobileNet');
-      setClassifier(imageClassifier);
-    };
-    initClassifier();
+    // Dynamically import ml5 only on the client side
+    import('ml5').then((ml5Module) => {
+      setMl5(ml5Module.default);
+    });
   }, []);
+
+  useEffect(() => {
+    if (ml5) {
+      const initClassifier = async () => {
+        const imageClassifier = await ml5.imageClassifier('MobileNet');
+        setClassifier(imageClassifier);
+      };
+      initClassifier();
+    }
+  }, [ml5]);
 
   const handleAddItem = () => {
     if (newItem.name && newItem.color && newItem.type) {
@@ -91,12 +99,11 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
   }
 
   return (
-    <Card className=" mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-      
-        
-     
-      <CardContent className="">
-      <CardTitle className="text-2xl text-pink-600 py-3 pink-600 ">Your Wardrobe</CardTitle>
+    <Card className="mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+      <CardHeader>
+        <CardTitle className="text-2xl text-pink-600">Your Wardrobe</CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
         <div className="mb-6">
           <Label htmlFor="wardrobeUpload" className="cursor-pointer block">
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors">
@@ -115,7 +122,7 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
         {isAddingItem && (
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <h3 className="text-lg font-semibold mb-4 text-pink-600">Add New Item</h3>
-            <div className="space-y-4 text-pink">
+            <div className="space-y-4">
               <Input
                 placeholder="Item name"
                 value={newItem.name}
@@ -126,9 +133,26 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
                 value={newItem.color}
                 onChange={(e) => setNewItem({ ...newItem, color: e.target.value })}
               />
-              
-              <Button onClick={handleAddItem} className="w-full mt-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-full text-lg transform hover:scale-105 transition-transform duration-20">
-                Add to Wardrobe</Button>
+              {/* <Select
+                value={newItem.type}
+                onChange={(value) => setNewItem({ ...newItem, type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Shirt">Shirt</SelectItem>
+                  <SelectItem value="Pants">Pants</SelectItem>
+                  <SelectItem value="Shoes">Shoes</SelectItem>
+                  <SelectItem value="Dress">Dress</SelectItem>
+                  <SelectItem value="Skirt">Skirt</SelectItem>
+                  <SelectItem value="Jacket">Jacket</SelectItem>
+                  <SelectItem value="Accessory">Accessory</SelectItem>
+                </SelectContent>
+              </Select> */}
+              <Button onClick={handleAddItem} className="w-full bg-pink-500 hover:bg-pink-600 text-white">
+                Add to Wardrobe
+              </Button>
             </div>
           </div>
         )}
@@ -144,8 +168,7 @@ export default function WardrobeList({ wardrobe, setWardrobe }: WardrobeListProp
                 <p className="text-sm text-gray-600 text-center">{item.color}</p>
                 <p className="text-xs text-gray-500 text-center">{item.type}</p>
                 <Button
-                  // variant="ghost"
-                  // size="icon"
+                  
                   onClick={() => handleRemoveItem(item.id)}
                   className="mt-2"
                 >

@@ -8,7 +8,6 @@ import { Label } from "./ui/label"
 import { Button } from "./ui/Button"
 import { Camera, Loader } from "lucide-react"
 import React from 'react'
-import * as ml5 from 'ml5'
 
 export default function ReferenceOutfitUpload({ wardrobe }) {
   const [referenceOutfit, setReferenceOutfit] = useState<string | null>(null)
@@ -16,15 +15,25 @@ export default function ReferenceOutfitUpload({ wardrobe }) {
   const [imageKeywords, setImageKeywords] = useState<string[]>([])
   const [generatedOutfit, setGeneratedOutfit] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [ml5, setMl5] = useState<any>(null)
 
   useEffect(() => {
-    // Initialize ml5 classifier
-    const initClassifier = async () => {
-      const imageClassifier = await ml5.imageClassifier('MobileNet')
-      setClassifier(imageClassifier)
-    }
-    initClassifier()
+    // Dynamically import ml5 only on the client side
+    import('ml5').then((ml5Module) => {
+      setMl5(ml5Module.default)
+    })
   }, [])
+
+  useEffect(() => {
+    // Initialize ml5 classifier once ml5 is loaded
+    if (ml5) {
+      const initClassifier = async () => {
+        const imageClassifier = await ml5.imageClassifier('MobileNet')
+        setClassifier(imageClassifier)
+      }
+      initClassifier()
+    }
+  }, [ml5])
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]

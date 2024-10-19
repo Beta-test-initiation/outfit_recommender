@@ -3,12 +3,15 @@
 import { useState, useEffect } from 'react'
 
 import { Sparkles, Shirt, Clock } from 'lucide-react'
-import ReferenceOutfitUpload from './components/ReferenceOutfitUpload'
+
 import WardrobeList from './components/WardrobeList'
 import { WardrobeItem } from '../types'
 import { Separator } from './components/ui/separator'
 import { Card, CardHeader, CardContent, Button } from '@mui/material'
 import { CardTitle } from './components/ui/Card'
+import ReferenceOutfitUpload from './components/ReferenceOutfitUpload'
+
+
 export default function Home() {
   const [wardrobe, setWardrobe] = useState<WardrobeItem[]>([
     { id: 1, name: 'White T-Shirt', color: 'White', type: 'Top' },

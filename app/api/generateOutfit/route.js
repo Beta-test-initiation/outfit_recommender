@@ -1,5 +1,4 @@
 // app/api/generateOutfit/route.js
-
 import { CohereClient } from 'cohere-ai';
 import { NextResponse } from 'next/server';
 
