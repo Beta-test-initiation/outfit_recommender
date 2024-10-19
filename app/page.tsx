@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 
-import { WardrobeItem } from '@/types'
-import { Separator } from 'radix-ui'
+
+import { Separator } from '@radix-ui/react-separator'
 import React from 'react'
 import OutfitGenerator from './components/OutfitGenerator'
 import ReferenceOutfitUpload from './components/ReferenceOutfitUpload'
 import WardrobeList from './components/WardrobeList'
+import { WardrobeItem } from '../types'
 
 export default function Home() {
   const [wardrobe, setWardrobe] = useState<WardrobeItem[]>([

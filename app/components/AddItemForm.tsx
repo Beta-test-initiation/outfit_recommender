@@ -4,7 +4,8 @@ import React from "react"
 import { Button } from "./ui/Button"
 import { Input } from "./ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { WardrobeItem } from '@/types'
+import { WardrobeItem } from "../../types"
+
 
 interface AddItemFormProps {
   onAddItem: (item: Omit<WardrobeItem, 'id'>) => void;
